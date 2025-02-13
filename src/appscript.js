@@ -19,7 +19,7 @@ function doGet(e) {
   }
   
   // Assume the available spaces are in cell A2
-  const availableSpaces = sheet.getRange("A2").getValue();
+  const availableSpaces = sheet.getRange("B2").getValue();
   
   return ContentService
     .createTextOutput(availableSpaces.toString())

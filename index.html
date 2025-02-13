@@ -14,6 +14,10 @@
             font-size: 24px;
             font-weight: bold;
             margin-top: 20px;
+            color: green;
+        }
+        .error {
+            color: red;
         }
         .reload-button {
             margin-top: 20px;
@@ -27,21 +31,32 @@
     <h1>Smart Parking System</h1>
     <p>Available Parking Spaces:</p>
     <div class="status" id="parkingSpaces">Loading...</div>
-    <!-- <button class="reload-button" onclick="location.reload()">Update</button> -->
     
     <script>
         async function fetchParkingData() {
             try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbxB70-rNP4CHAI6cyEdnA9Myt0DUrzrJmraGpMSw3aRzZykynLfxaPgkMYH26qnSsyM/exec');
-                if (!response.ok) throw new Error('Network response was not ok');
+                const response = await fetch('https://script.google.com/macros/s/AKfycbzssTRbUiVzpHc0ItU5KcihpRuB_SYtalzLfKuSvBxzyM_F3Qg39pagdRy--xzIIBo/exec?nocache=' + Date.now());
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
                 const data = await response.text();
-                document.getElementById('parkingSpaces').innerText = data;
+                
+                // Ensure data is a valid number before updating
+                if (!isNaN(data.trim())) {
+                    document.getElementById('parkingSpaces').innerText = data;
+                    document.getElementById('parkingSpaces').classList.remove("error");
+                } else {
+                    throw new Error('Invalid data received');
+                }
             } catch (error) {
                 console.error('Error fetching data:', error);
                 document.getElementById('parkingSpaces').innerText = 'Error fetching data';
+                document.getElementById('parkingSpaces').classList.add("error");
             }
         }
-        
+
         // Fetch data every 5 seconds
         setInterval(fetchParkingData, 5000);
         fetchParkingData();

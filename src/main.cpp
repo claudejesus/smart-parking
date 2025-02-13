@@ -4,6 +4,7 @@
 #include <LiquidCrystal.h>
 #include <ESP32Servo.h>
 
+// Function Declarations
 void manualUpdate();
 void openGate();
 void closeGate();
@@ -14,15 +15,13 @@ void connectToWiFi();
 void getDataFromGoogleSheets();
 void sendDataToGoogleSheets(int availableSpaces);
 
-
-
-
 // WiFi Credentials
 const char* ssid = "Wokwi-GUEST";        
-const char* password = ""; 
+const char* password = "";
 
 // Google Sheets API Endpoint (Replace with your actual script URL)
-const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbxB70-rNP4CHAI6cyEdnA9Myt0DUrzrJmraGpMSw3aRzZykynLfxaPgkMYH26qnSsyM/exec";
+// const char* googleScriptURL = "http://script.google.com/macros/s/AKfycbxB70-rNP4CHAI6cyEdnA9Myt0DUrzrJmraGpMSw3aRzZykynLfxaPgkMYH26qnSsyM/exec";
+const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbzssTRbUiVzpHc0ItU5KcihpRuB_SYtalzLfKuSvBxzyM_F3Qg39pagdRy--xzIIBo/exec";
 
 // Pin Definitions
 #define ENTRY_BUTTON 26    
@@ -33,7 +32,6 @@ const char* googleScriptURL = "https://script.google.com/macros/s/AKfycbxB70-rNP
 
 int totalSpaces = 10;
 int availableSpaces = 10;
-
 
 Servo gateServo;
 LiquidCrystal lcd(21, 19, 18, 5, 17, 16);  
@@ -66,23 +64,18 @@ void loop() {
     if (digitalRead(EXIT_BUTTON) == LOW) {
         delay(200);
         if (availableSpaces < totalSpaces) {
-        Serial.println("Vehicle Exiting...");
-        availableSpaces++;
+            Serial.println("Vehicle Exiting...");
+            availableSpaces++;
 
-        Serial.println("Opening Gate...");
-        digitalWrite(LED_GATE, HIGH);
-        gateServo.write(90);
-        delay(3000);
-        Serial.println("Closing Gate...");
-        digitalWrite(LED_GATE, LOW);
-        gateServo.write(0);
+            openGate();
+            delay(3000);
+            closeGate();
 
-        lcdDisplay();
-        sendDataToGoogleSheets(availableSpaces);
-    } else {
-        Serial.println("No vehicles to exit!");
-    }
-        //getDataFromGoogleSheets();
+            lcdDisplay();
+            sendDataToGoogleSheets(availableSpaces);
+        } else {
+            Serial.println("No vehicles to exit!");
+        }
     }
 
     if (digitalRead(MANUAL_BUTTON) == LOW) {
@@ -123,8 +116,7 @@ void checkWiFi() {
 // Function to send data to Google Sheets (POST)
 void sendDataToGoogleSheets(int availableSpaces) {
     if (WiFi.status() == WL_CONNECTED) {
-        WiFiClientSecure client;
-        client.setInsecure();
+        WiFiClient client;  // Use non-secure client
         HTTPClient http;
         String postData = "spaces=" + String(availableSpaces);
 
@@ -151,13 +143,13 @@ void sendDataToGoogleSheets(int availableSpaces) {
 // Function to GET data from Google Sheets
 void getDataFromGoogleSheets() {
     if (WiFi.status() == WL_CONNECTED) {
-        WiFiClientSecure client;
-        client.setInsecure();
+        WiFiClient client;  // Use non-secure client
         HTTPClient http;
         String requestURL = String(googleScriptURL) + "?action=get";
 
         Serial.println("Fetching data from Google Sheets...");
-        http.begin(requestURL);
+        http.begin(client, requestURL);
+        http.setTimeout(15000); // 15 seconds timeout
         
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0) {
@@ -192,22 +184,6 @@ void vehicleEntry() {
         Serial.println("Parking Full!");
     }
 }
-
-// void vehicleExit() {
-//     // if (availableSpaces < totalSpaces) {
-//     //     Serial.println("Vehicle Exiting...");
-//     //     availableSpaces++;
-
-//     //     openGate();
-//     //     delay(3000);
-//     //     closeGate();
-
-//     //     lcdDisplay();
-//     //     sendDataToGoogleSheets(availableSpaces);
-//     // } else {
-//     //     Serial.println("No vehicles to exit!");
-//     // }
-// }
 
 void manualUpdate() {
     Serial.println("Manual Update: Reset to 10 spaces.");
